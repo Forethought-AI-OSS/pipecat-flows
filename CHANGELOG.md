@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [1.1.0] - 2026-05-07
+
+### Changed
+
+- Widened function handler return types to align with Pipecat's upstream
+  `FunctionCallResultCallback` contract. `ZeroArgFunctionHandler`,
+  `LegacyFunctionHandler`, and `FlowFunctionHandler` now return
+  `Awaitable[Any]`, and `ConsolidatedFunctionResult`'s first slot is `Any`
+  (previously `FlowResult | None`). This is strictly additive: handlers that
+  returned `FlowResult` still validate, and handlers that returned arbitrary
+  JSON-serializable values (e.g. the quickstart's `(color, next_node)` string
+  tuple) are now type-clean. `FlowResult` remains available as an optional
+  convenience type for handlers that want a structured `status`/`error` shape.
+  (PR [#263](https://github.com/pipecat-ai/pipecat-flows/pull/263))
+
+### Deprecated
+
+- `FlowResult` is deprecated and will be removed in 2.0.0. It is no longer
+  referenced by any handler type in the library, and Pipecat's upstream
+  function-call-result contract is `Any` end-to-end. Define your own
+  `TypedDict` if you want a structured result, or return any JSON-serializable
+  value. Existing `FlowResult` subclasses continue to work until removal.
+  (PR [#263](https://github.com/pipecat-ai/pipecat-flows/pull/263))
+
+- Single-argument (legacy) action handlers are deprecated and will be removed
+  in 2.0.0. Update handlers to accept `(action: dict, flow_manager:
+  FlowManager)`. A `DeprecationWarning` is emitted once per `ActionManager`
+  instance the first time a legacy action handler is invoked.
+  (PR [#263](https://github.com/pipecat-ai/pipecat-flows/pull/263))
+
+- 0-argument and 1-argument (legacy) function handlers are deprecated and will
+  be removed in 2.0.0. Update handlers to accept `(args: FlowArgs,
+  flow_manager: FlowManager)`. A `DeprecationWarning` is emitted once per
+  `FlowManager` instance the first time each deprecated shape is invoked. The
+  `ZeroArgFunctionHandler` type is now exported so the currently supported
+  handler shapes are fully described by the public type surface.
+  (PR [#263](https://github.com/pipecat-ai/pipecat-flows/pull/263))
+
+### Fixed
+
+- `FlowsDirectFunction` is now defined as `Callable[...,
+  Awaitable[ConsolidatedFunctionResult]]` instead of a `Protocol` with
+  `**kwargs: Any`. Python's Protocol system cannot express "any concrete
+  named-parameter list" against `**kwargs: Any`, which caused pyright to reject
+  direct functions with normal named parameters (e.g. `async def
+  f(flow_manager: FlowManager, llm: str)`). Runtime validation of the expected
+  shape is unchanged and still handled by
+  `FlowsDirectFunctionWrapper.validate_function`.
+  (PR [#263](https://github.com/pipecat-ai/pipecat-flows/pull/263))
+
 ## [1.0.0] - 2026-04-15
 
 Migration guide: https://docs.pipecat.ai/pipecat-flows/migration/migration-1.0
