@@ -19,7 +19,7 @@ classifiers = [
     "Topic :: Multimedia :: Sound/Audio",
 ]
 dependencies = [
-    "pipecat-ai>=1.0.0,<2",
+    "pipecat-ai",
     "loguru~=0.7.3",
     "docstring_parser>=0.16,<1",
 ]
